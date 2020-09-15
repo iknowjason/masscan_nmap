@@ -1,6 +1,7 @@
 ## Overview:  These steps will help you automate masscan and nmap together.  Run masscan to enumerate all live hosts and listening ports.
 ### Then use nmap to run a more targeted service and NSE basic scripts scan.  This will ran against all hosts with all enumerated ports.
 ### So there might be extra port scans that run against hosts that don't have those listening ports.
+### Important Note:  Tested on masscan 1.06 - There might be issues with older versions of masscan (i.e., 1.04) with JSON output
 
 ### Step 1:  Run masscan with a JSON output file
 ### Example:  sudo masscan 192.168.10.0/24 -p1-65535 -oJ mscan.xml

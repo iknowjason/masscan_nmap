@@ -1,11 +1,14 @@
-import os
-
-### Step 1:  Edit your masscan command in the variable line below, correctly specifying your hosts and ports.  You don't need to change the '-oG mscan.txt' line as this is required.
-masscan_command = "sudo masscan 192.168.7.0/24 --rate 20000 -p1-3000 -oG mscan.txt"
-#Example masscan_command = "sudo masscan 192.168.7.0/24 --rate 20000 -p1-65535 -oG mscan.txt"
-#Example masscan_command = "sudo masscan 192.168.7.0/24 -p1-65535 -oG mscan.txt"
+### Step 1:  Edit your masscan command in the variable line below, correctly specifying your hosts and ports.  You don't need to change the '-oJ mscan.xml' line as this is required.
+masscan_command = "sudo masscan 192.168.7.0/24 --rate 20000 -p1-3000 -oG mscan.xml"
+#Example masscan_command = "sudo masscan 192.168.7.0/24 --rate 20000 -p1-65535 -oG mscan.xml"
+#Example masscan_command = "sudo masscan 192.168.7.0/24 -p1-65535 -oG mscan.xml"
 ### Note:  Make sure your output file name is 'mscan.txt'
 
+### Step 2:  Run this script
+### python3 masscan_nmap3.py
+
+import os
+import json
 hosts = {}
 ports = "ports"
 
@@ -13,38 +16,33 @@ ports = "ports"
 print("[+] Running the masscan enumeration:  %s" % masscan_command)
 os.system(masscan_command)
 
-with open('mscan.txt') as f:
-    lines = f.readlines()
-    for line in lines:
-        if line.startswith('Host:'):
+with open('mscan.xml') as json_file:
 
-            ### split the line to parse it
-            x = line.split(" ")
-            ip_addr = x[1]
+    loaded_json = json.load(json_file)
+    for x in loaded_json:
 
-            ### Parse the port only if TCP and open
-            if "open" in x[3] and "tcp" in x[3]:
-                port_str = x[3].split('/')
-                port = port_str[0]
+        ### Parse the port only if open (if you want TCP ports only - specify here)
+        if x["ports"][0]["status"] == "open":
+            port = x["ports"][0]["port"]
+            ip_addr = x["ip"]
+            ### Add the IP address to dictionary if it doesn't already exist
+            try:
+                hosts[ip_addr]
+            except KeyError:
+                hosts[ip_addr] = {}
 
-                ### Add the IP address to dictionary if it doesn't already exist
-                try:
-                    hosts[ip_addr]
-                except KeyError:
-                    hosts[ip_addr] = {}
+            ### Add the port list to dictionary if it doesn't already exist
+            try:
+                hosts[ip_addr][ports]
+            except KeyError:
+                hosts[ip_addr][ports] = []
 
-                ### Add the port list to dictionary if it doesn't already exist
-                try:
-                    hosts[ip_addr][ports]
-                except KeyError:
-                    hosts[ip_addr][ports] = []
+            ## append the port to the list
+            if port in hosts[ip_addr][ports]:
+                pass
+            else:
+                hosts[ip_addr][ports].append(port)
 
-                ## append the port to the list
-                if port in hosts[ip_addr][ports]:
-                    #print("Port %s already exists" % port)
-                    pass
-                else:
-                    hosts[ip_addr][ports].append(port)
 
 # Create host and port scan text file
 text_file = open("scans.txt", 'w')
@@ -61,10 +59,11 @@ for h in hosts:
     tstring = h
     tstring += str(':-p')
     for p in hosts[h]["ports"]:
-        print("    [+] Port: %s" % p)
-        port_str += p
+        blah = str(p)
+        print("    [+] Port: %s" % blah)
+        port_str += blah 
         port_str += str(",")
-        tstring += p
+        tstring += blah 
         tstring += str(",")
     tmp_str = port_str[:-1]
     text_file.write(" %s\n" % tmp_str)

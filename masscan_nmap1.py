@@ -48,14 +48,20 @@ with open('%s' % str(sys.argv[1])) as json_file:
                 pass
             else:
                 hosts[ip_addr][ports].append(port)
+                print("[+] Appending port: %s" % port)
+                port_list.append(port)
 
 for h in hosts:
     print("[+] Appending host: %s" % h)
     host_list.append(h)
     hcount+=1
 
+## remove duplicate ports in list for combined ports
+port_list = list(dict.fromkeys(port_list))
+
 ## Create a port list string
-for i in hosts[ip_addr][ports]:
+for i in port_list: 
+    print("[+] Listing port in string: %s" % i)
     portstring = str(i) 
     port_list_str += portstring 
     port_list_str += str(",")

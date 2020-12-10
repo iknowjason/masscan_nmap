@@ -6,26 +6,27 @@
 # 4.  Output nmap scan with -oA nmap_scan 
 # Important Note:  Tested on masscan 1.06 - Older versions (1.04, 1.05) will not work with JSON decoder 
 
+####
 # Author:  Jason Ostrom
+#
+# Script Usage: sudo masscan_nmap2.py -i <IP_Targets> -p <Port_Targets> -r <Rate> 
+####
 
 # Dependencies:
 # 1.  masscan 1.06
 # 2.  nmap
 # 3.  python3
 
-# Step 1: Edit the masscan base command variable (MASSCAN_CMD) in the line below to include your scope for target IP addresses and ports 
-# Optional:  Tune the rate (--rate).  Below 10,000 is used.  100 is the default, which is quite slow 
-MASSCAN_CMD = "sudo masscan 192.168.1.0/24 --rate 10000 -p1-1000 -oJ mscan.xml" 
-# Note:  Make sure you don't change the xml file output section (-oJ mscan.xml) as this is vital for the script to work 
-
-# Step 2: Edit the nmap base command variable (NMAP_CMD) in the line below to include your preferred nmap options
+# Step 1: Edit the nmap base command variable (NMAP_CMD) in the line below to include your preferred nmap options
 # Note:  Don't touch HOSTS  and PORTS in the variable below ~ This is dynamically populated
 # The script dynamically creates a normalized port list string, so you don't have to worry about the port list and IP addresses
 NMAP_CMD = "sudo nmap -n -vvv -Pn -sV -sC HOSTS PORTS -oA nmap_scan"
 
-# Step 3:  Run this script
-# Example:  python3 masscan_nmap2.py
-###
+# Step 2:  This is a place holder for any extra options we decide to implement in the future 
+#MASSCAN_OPTIONS = "" 
+
+### import argparse
+import argparse
 
 ### import os
 import os
@@ -53,6 +54,40 @@ port_list_str = "-p"
 
 ## a counter for number of discovered hosts
 hcount = 0
+
+### argparse declaration
+parser = argparse.ArgumentParser()
+
+### add IP address argument
+parser.add_argument('-i', help='Target IP Addresses', required=True)
+
+### add port range argument
+parser.add_argument('-p', help='Target Ports', required=True)
+
+### add optional rate 
+parser.add_argument("-r", default="100")
+
+### parse arguments
+args = parser.parse_args()
+
+### define ip_targets
+TARGET_IP = args.i
+
+### define port_targets
+TARGET_PORTS = "-p" + args.p
+
+### define optional rate (default is 100) 
+RATE = "--rate " + args.r 
+
+### check minimum length
+if len(sys.argv) < 4:
+    print ("[-] Invalid usage ~ Requires (-i) and (-p)")
+    print ("Usage:  %s -i <IP_Targets> -p <Port_Targets> -r <Rate>" % sys.argv[0])
+    print ("Example:  %s -i 192.168.1.0/24 -p 1-65535 -r 1000" % sys.argv[0])
+    sys.exit()
+
+### Build the Masscan Command
+MASSCAN_CMD = "sudo masscan " + TARGET_IP + " " + RATE + " " + TARGET_PORTS + " -oJ mscan.xml" 
 
 ### Run the masscan command
 print("[+] Running the masscan enumeration:  %s" % MASSCAN_CMD)
